@@ -5,11 +5,11 @@ import sys
 
 TAMANIO_TABLERO = 10
 BARCOS = {
-    "Portaaviones": 5,
-    "Acorazado": 4,
-    "Crucero": 3,
-    "Submarino": 3,
-    "Destructor": 2
+    "Portaaviones": 4,
+    "Buque": 3,
+    "Crucero": 2,
+    "Submarino": 2,
+    "Lancha": 1
 }
 
 # FUNCIONES
