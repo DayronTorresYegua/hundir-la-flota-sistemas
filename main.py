@@ -11,23 +11,44 @@ BARCOS = {
     "Lancha": 1
 }
 
+# Nuevas constantes para mapear letras a números
+LETRAS_A_NUMEROS = {
+    'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4,
+    'F': 5, 'G': 6, 'H': 7, 'I': 8, 'J': 9
+}
+NUMEROS_A_LETRAS = {v: k for k, v in LETRAS_A_NUMEROS.items()}
+
 # FUNCIONES
 
 # ENTRADA
 def entrada_usuario():
-    """Solicita al usuario que ingrese una coordenada (fila y columna) para disparar"""
-    sys.stdout.write("Introduce la fila y columna (ejemplo: 3 5): ")
+    """Solicita al usuario que ingrese una coordenada (letra y número) para disparar"""
+    sys.stdout.write("Introduce la coordenada (ejemplo: A 5 o A5): ")
     sys.stdout.flush()
-    entrada = sys.stdin.readline().strip() 
+    entrada = sys.stdin.readline().strip().upper().replace(" ", "")
 
     try:
-        fila, columna = map(int, entrada.split())
-        if 0 <= fila < 10 and 0 <= columna < 10:
+        if len(entrada) < 2:
+            print("Formato incorrecto. Introduce una letra (A-J) seguida de un número (0-9).")
+            return entrada_usuario()
+
+        letra = entrada[0]
+        columna_str = entrada[1:]
+        
+        if letra not in LETRAS_A_NUMEROS:
+            print("Letra fuera de rango (A-J). Intenta de nuevo.")
+            return entrada_usuario()
+            
+        fila = LETRAS_A_NUMEROS[letra]
+        columna = int(columna_str)
+        
+        if 0 <= columna < 10:
             return fila, columna
-        print("Coordenadas fuera de rango. Intenta de nuevo.")
+        print("Columna fuera de rango (0-9). Intenta de nuevo.")
     except ValueError:
-        print("Formato incorrecto. Introduce dos números separados por un espacio.")
-    return entrada_usuario()  
+        print("Formato incorrecto. Introduce una letra (A-J) seguida de un número (0-9).")
+    
+    return entrada_usuario()
 
 # PROCESAMIENTO
 
@@ -166,11 +187,12 @@ def disparar(tablero, tablero_vista, fila, columna):
     
     return "Tocado"
 
-def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugador=True):
+def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugador=True, disparos_jugador=0, disparos_maquina=0):
     """Muestra el estado actual del juego: primero el tablero del jugador, 
     luego si es turno del jugador, muestra el tablero enemigo"""
     print("\n" + "="*50)
-    print("Tu tablero:")
+    print(f"Tus disparos: {disparos_jugador} | Disparos enemigos: {disparos_maquina}")
+    print("\nTu tablero:")
     imprimir_tablero(tablero_jugador)
     
     if es_turno_jugador:
@@ -178,37 +200,44 @@ def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugado
         print("\nTablero enemigo (lo que has descubierto):")
         imprimir_tablero(tablero_vista_maquina)
 
-def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador):
+def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador, disparos_maquina):
     """Permite al jugador realizar un disparo al tablero de la máquina"""
     # Primero mostramos los tableros en el orden deseado
-    mostrar_estado_juego(tablero_jugador, tablero_vista_maquina)
+    mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, True, disparos_jugador, disparos_maquina)
     
     seguir_disparando = True
+    disparos_nuevos = 0
+    
     while seguir_disparando:
         fila, columna = entrada_usuario()
         resultado = disparar(tablero_maquina, tablero_vista_maquina, fila, columna)
 
         if resultado:
-            print(f"Resultado: {resultado}")
+            disparos_nuevos += 1
+            letra_fila = NUMEROS_A_LETRAS[fila]
+            print(f"Disparaste en {letra_fila}{columna} - Resultado: {resultado}")
+            
             if resultado != "Agua":
                 print("\nTablero enemigo actualizado:")
                 imprimir_tablero(tablero_vista_maquina)
 
             # Comprobar si el jugador ganó después de este disparo
             if not quedan_barcos(tablero_maquina):
-                return True  # El jugador ha ganado
+                return True, disparos_jugador + disparos_nuevos  # El jugador ha ganado
                 
             if resultado == "Agua":
                 seguir_disparando = False  # Si es agua, termina el turno
     
-    return False  # No ha ganado todavía
+    return False, disparos_jugador + disparos_nuevos  # No ha ganado todavía
 
-def turno_maquina(tablero_jugador):
+def turno_maquina(tablero_jugador, disparos_maquina):
     """Permite a la máquina realizar un disparo al tablero del jugador"""
     print("\n" + "="*50)
     print("TURNO DE LA MÁQUINA")
     
     seguir_disparando = True
+    disparos_nuevos = 0
+    
     while seguir_disparando:
         fila = random.randint(0, TAMANIO_TABLERO - 1)
         columna = random.randint(0, TAMANIO_TABLERO - 1)
@@ -217,7 +246,9 @@ def turno_maquina(tablero_jugador):
         resultado = disparar(tablero_jugador, tablero_jugador, fila, columna)
 
         if resultado:
-            print(f"La máquina disparó en ({fila}, {columna}) - Resultado: {resultado}")
+            disparos_nuevos += 1
+            letra_fila = NUMEROS_A_LETRAS[fila]
+            print(f"La máquina disparó en {letra_fila}{columna} - Resultado: {resultado}")
             
             if resultado != "Agua" or not seguir_disparando:
                 print("\nTu tablero actualizado:")
@@ -225,19 +256,31 @@ def turno_maquina(tablero_jugador):
 
             # Comprobar si la máquina ganó después de este disparo
             if not quedan_barcos(tablero_jugador):
-                return True  # La máquina ha ganado
+                return True, disparos_maquina + disparos_nuevos  # La máquina ha ganado
                 
             if resultado == "Agua":
                 seguir_disparando = False  # Si es agua, termina el turno
     
-    return False  # No ha ganado todavía
+    return False, disparos_maquina + disparos_nuevos  # No ha ganado todavía
 
-def anuncia_ganador(jugador_gano, maquina_gano):
-    """Anuncia el ganador del juego"""
+def mostrar_estadisticas_finales(jugador_gano, disparos_jugador, disparos_maquina):
+    """Muestra las estadísticas finales del juego"""
+    print("\n" + "="*50)
+    print("ESTADÍSTICAS FINALES DEL JUEGO")
+    print(f"Disparos realizados por ti: {disparos_jugador}")
+    print(f"Disparos realizados por la máquina: {disparos_maquina}")
+    
+    # Calcular eficiencia (barcos hundidos por disparo)
+    casillas_barcos = sum(BARCOS.values())
+
+def anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
+    """Anuncia el ganador del juego, pero sin mostrar estadísticas"""
     if jugador_gano:
+        mostrar_estadisticas_finales(True, disparos_jugador, disparos_maquina)
         print("\n¡Felicidades! Has hundido toda la flota enemiga. ¡Ganaste! 🎉")
         return True
     elif maquina_gano:
+        mostrar_estadisticas_finales(False, disparos_jugador, disparos_maquina)
         print("\nLa máquina ha hundido toda tu flota. ¡Perdiste! 😢")
         return True
     return False
@@ -245,10 +288,11 @@ def anuncia_ganador(jugador_gano, maquina_gano):
 # SALIDA
 
 def imprimir_tablero(tablero):
-    """Muestra el tablero en la terminal"""
+    """Muestra el tablero en la terminal con letras para las filas"""
     print("  " + " ".join(str(i) for i in range(TAMANIO_TABLERO)))
     for i, fila in enumerate(tablero):
-        print(str(i) + " " + " ".join(fila))
+        letra_fila = NUMEROS_A_LETRAS[i]
+        print(letra_fila + " " + " ".join(fila))
 
 def mostrar_leyenda():
     """Muestra la leyenda de símbolos del tablero"""
@@ -258,6 +302,7 @@ def mostrar_leyenda():
     print("T - Barco tocado")
     print("H - Barco hundido")
     print("P, B, C, S, L - Tus barcos (Portaaviones, Buque, Crucero, Submarino, Lancha)")
+    print("\nCoordenadas: Usa letra (A-J) y número (0-9), por ejemplo: A5, B3, J9")
 
 def main():
     """Función principal que controla el flujo del juego"""
@@ -271,6 +316,10 @@ def main():
     # Colocar barcos en los tableros
     colocar_barcos(tablero_jugador)
     colocar_barcos(tablero_maquina)
+
+    # Contadores de disparos
+    disparos_jugador = 0
+    disparos_maquina = 0
 
     print("\n¡BIENVENIDO A HUNDIR LA FLOTA!\n")
     mostrar_leyenda()
@@ -298,7 +347,10 @@ def main():
                 resultado = disparar(tablero_maquina, tablero_vista_maquina, fila, columna)
 
                 if resultado:
-                    print(f"Resultado: {resultado}")
+                    disparos_jugador += 1
+                    letra_fila = NUMEROS_A_LETRAS[fila]
+                    print(f"Disparaste en {letra_fila}{columna} - Resultado: {resultado}")
+                    
                     if resultado != "Agua":
                         print("\nTablero enemigo actualizado:")
                         imprimir_tablero(tablero_vista_maquina)
@@ -314,19 +366,19 @@ def main():
             primer_turno = False
         else:
             # Turno del jugador
-            jugador_gano = turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador)
+            jugador_gano, disparos_jugador = turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador, disparos_maquina)
 
         # Verificar si el juego terminó después del turno del jugador
-        if anuncia_ganador(jugador_gano, maquina_gano):
+        if anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
             juego_terminado = True
             continue
             
         # Turno de la máquina (solo si el jugador no ganó)
         if not jugador_gano:
-            maquina_gano = turno_maquina(tablero_jugador)
+            maquina_gano, disparos_maquina = turno_maquina(tablero_jugador, disparos_maquina)
             
             # Verificar si el juego terminó después del turno de la máquina
-            if anuncia_ganador(jugador_gano, maquina_gano):
+            if anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
                 juego_terminado = True
 
 if __name__ == "__main__":
