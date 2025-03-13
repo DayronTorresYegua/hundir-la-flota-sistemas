@@ -11,14 +11,11 @@ BARCOS = {
     "Lancha": 1
 }
 
-# Nuevas constantes para mapear letras a números
 LETRAS_A_NUMEROS = {
     'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4,
     'F': 5, 'G': 6, 'H': 7, 'I': 8, 'J': 9
 }
 NUMEROS_A_LETRAS = {v: k for k, v in LETRAS_A_NUMEROS.items()}
-
-# FUNCIONES
 
 # ENTRADA
 def entrada_usuario():
@@ -70,7 +67,6 @@ def poder_colocar_barco(tablero, fila, columna, tamaño, orientacion):
 
 def colocar_barcos(tablero):
     """Coloca los barcos en posiciones aleatorias en el tablero"""
-    # Ya tenemos definido un barco de cada tipo en BARCOS
     for nombre, tamaño in BARCOS.items():
         colocado = False
         while not colocado:
@@ -81,7 +77,7 @@ def colocar_barcos(tablero):
             if poder_colocar_barco(tablero, fila, columna, tamaño, orientacion):
                 for i in range(tamaño):
                     if orientacion == 'H':
-                        tablero[fila][columna + i] = nombre[0]  # Representamos con la primera letra
+                        tablero[fila][columna + i] = nombre[0]  
                     else:
                         tablero[fila + i][columna] = nombre[0]
                 colocado = True
@@ -98,7 +94,6 @@ def encontrar_todas_posiciones_barco(tablero, letra_barco, fila, columna):
     """Encuentra todas las posiciones de un barco específico"""
     posiciones = [(fila, columna)]
     
-    # Primero determinar la orientación del barco
     # Verificar si hay partes del barco a la izquierda o derecha
     horizontal = (columna > 0 and (tablero[fila][columna-1] == letra_barco or tablero[fila][columna-1] == "T")) or \
                  (columna < TAMANIO_TABLERO-1 and (tablero[fila][columna+1] == letra_barco or tablero[fila][columna+1] == "T"))
@@ -107,33 +102,27 @@ def encontrar_todas_posiciones_barco(tablero, letra_barco, fila, columna):
     vertical = (fila > 0 and (tablero[fila-1][columna] == letra_barco or tablero[fila-1][columna] == "T")) or \
                (fila < TAMANIO_TABLERO-1 and (tablero[fila+1][columna] == letra_barco or tablero[fila+1][columna] == "T"))
     
-    # Si es un barco de una sola casilla (como la lancha), no tiene orientación definida
     if not horizontal and not vertical:
         return posiciones
     
-    # Si el barco es horizontal
     if horizontal:
-        # Buscar hacia la izquierda
+
         c = columna - 1
         while c >= 0 and (tablero[fila][c] == letra_barco or tablero[fila][c] == "T"):
             posiciones.append((fila, c))
             c -= 1
         
-        # Buscar hacia la derecha
         c = columna + 1
         while c < TAMANIO_TABLERO and (tablero[fila][c] == letra_barco or tablero[fila][c] == "T"):
             posiciones.append((fila, c))
             c += 1
     
-    # Si el barco es vertical
     elif vertical:
-        # Buscar hacia arriba
         f = fila - 1
         while f >= 0 and (tablero[f][columna] == letra_barco or tablero[f][columna] == "T"):
             posiciones.append((f, columna))
             f -= 1
         
-        # Buscar hacia abajo
         f = fila + 1
         while f < TAMANIO_TABLERO and (tablero[f][columna] == letra_barco or tablero[f][columna] == "T"):
             posiciones.append((f, columna))
@@ -143,12 +132,10 @@ def encontrar_todas_posiciones_barco(tablero, letra_barco, fila, columna):
 
 def comprobar_hundido(tablero, letra_barco, fila, columna):
     """Comprueba si todas las partes de un barco específico han sido tocadas"""
-    # Encontrar todas las posiciones del barco
     posiciones_barco = encontrar_todas_posiciones_barco(tablero, letra_barco, fila, columna)
     
-    # Verificar si todas están marcadas como tocadas
     for f, c in posiciones_barco:
-        if tablero[f][c] != "T":  # Si alguna parte no está tocada
+        if tablero[f][c] != "T":
             return False, posiciones_barco
     
     return True, posiciones_barco
@@ -157,28 +144,24 @@ def disparar(tablero, tablero_vista, fila, columna):
     """Evalúa el disparo y devuelve el resultado: Agua, Tocado o Hundido"""
     if tablero_vista[fila][columna] in ("T", "H", "-"):
         print("Ya has disparado en esta posición. Intenta otra vez.")
-        return None  # Disparo no válido
+        return None  
     
     if tablero[fila][columna] == "X":
-        tablero[fila][columna] = "-"  # Marcar agua en tablero real
-        tablero_vista[fila][columna] = "-"  # Marcar agua en tablero de vista
+        tablero[fila][columna] = "-"
+        tablero_vista[fila][columna] = "-"
         return "Agua"
+
+    letra_barco = tablero[fila][columna] 
+    tablero[fila][columna] = "T" 
+    tablero_vista[fila][columna] = "T" 
     
-    # Si hay un barco
-    letra_barco = tablero[fila][columna]  # Guardar la letra antes de cambiarla
-    tablero[fila][columna] = "T"  # Marcar como tocado en tablero real
-    tablero_vista[fila][columna] = "T"  # Marcar como tocado en tablero de vista
-    
-    # Comprobar si el barco está hundido
     hundido, posiciones = comprobar_hundido(tablero, letra_barco, fila, columna)
     
     if hundido:
-        # Marcar todas las posiciones del barco como hundidas
         for f, c in posiciones:
             tablero[f][c] = "H"
             tablero_vista[f][c] = "H"
         
-        # Identificar qué barco se ha hundido
         for nombre, _ in BARCOS.items():
             if nombre[0] == letra_barco:
                 return f"Hundido ({nombre})"
@@ -202,7 +185,6 @@ def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugado
 
 def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador, disparos_maquina):
     """Permite al jugador realizar un disparo al tablero de la máquina"""
-    # Primero mostramos los tableros en el orden deseado
     mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, True, disparos_jugador, disparos_maquina)
     
     seguir_disparando = True
@@ -221,15 +203,13 @@ def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, dispa
                 print("\nTablero enemigo actualizado:")
                 imprimir_tablero(tablero_vista_maquina)
 
-            # Comprobar si el jugador ganó después de este disparo
             if not quedan_barcos(tablero_maquina):
-                return True, disparos_jugador + disparos_nuevos  # El jugador ha ganado
+                return True, disparos_jugador + disparos_nuevos  
                 
             if resultado == "Agua":
-                seguir_disparando = False  # Si es agua, termina el turno
+                seguir_disparando = False  
     
-    return False, disparos_jugador + disparos_nuevos  # No ha ganado todavía
-
+    return False, disparos_jugador + disparos_nuevos  
 def turno_maquina(tablero_jugador, disparos_maquina):
     """Permite a la máquina realizar un disparo al tablero del jugador"""
     print("\n" + "="*50)
@@ -242,7 +222,6 @@ def turno_maquina(tablero_jugador, disparos_maquina):
         fila = random.randint(0, TAMANIO_TABLERO - 1)
         columna = random.randint(0, TAMANIO_TABLERO - 1)
         
-        # La máquina no necesita un tablero de vista, ya que dispara aleatoriamente
         resultado = disparar(tablero_jugador, tablero_jugador, fila, columna)
 
         if resultado:
@@ -254,14 +233,13 @@ def turno_maquina(tablero_jugador, disparos_maquina):
                 print("\nTu tablero actualizado:")
                 imprimir_tablero(tablero_jugador)
 
-            # Comprobar si la máquina ganó después de este disparo
             if not quedan_barcos(tablero_jugador):
-                return True, disparos_maquina + disparos_nuevos  # La máquina ha ganado
+                return True, disparos_maquina + disparos_nuevos  
                 
             if resultado == "Agua":
-                seguir_disparando = False  # Si es agua, termina el turno
+                seguir_disparando = False  
     
-    return False, disparos_maquina + disparos_nuevos  # No ha ganado todavía
+    return False, disparos_maquina + disparos_nuevos  
 
 def mostrar_estadisticas_finales(jugador_gano, disparos_jugador, disparos_maquina):
     """Muestra las estadísticas finales del juego"""
@@ -270,7 +248,6 @@ def mostrar_estadisticas_finales(jugador_gano, disparos_jugador, disparos_maquin
     print(f"Disparos realizados por ti: {disparos_jugador}")
     print(f"Disparos realizados por la máquina: {disparos_maquina}")
     
-    # Calcular eficiencia (barcos hundidos por disparo)
     casillas_barcos = sum(BARCOS.values())
 
 def anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
