@@ -170,11 +170,10 @@ def disparar(tablero, tablero_vista, fila, columna):
     
     return "Tocado"
 
-def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugador=True, disparos_jugador=0, disparos_maquina=0):
+# Modificado para no mostrar conteo de disparos durante el juego
+def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugador=True):
     """Muestra el estado actual del juego: primero el tablero del jugador, 
     luego si es turno del jugador, muestra el tablero enemigo"""
-    print("\n" + "="*50)
-    print(f"Tus disparos: {disparos_jugador} | Disparos enemigos: {disparos_maquina}")
     print("\nTu tablero:")
     imprimir_tablero(tablero_jugador)
     
@@ -183,9 +182,9 @@ def mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, es_turno_jugado
         print("\nTablero enemigo (lo que has descubierto):")
         imprimir_tablero(tablero_vista_maquina)
 
-def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador, disparos_maquina):
+def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador):
     """Permite al jugador realizar un disparo al tablero de la máquina"""
-    mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, True, disparos_jugador, disparos_maquina)
+    mostrar_estado_juego(tablero_jugador, tablero_vista_maquina, True)
     
     seguir_disparando = True
     disparos_nuevos = 0
@@ -204,15 +203,15 @@ def turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, dispa
                 imprimir_tablero(tablero_vista_maquina)
 
             if not quedan_barcos(tablero_maquina):
-                return True, disparos_jugador + disparos_nuevos  
+                return True, disparos_jugador + disparos_nuevos
                 
             if resultado == "Agua":
-                seguir_disparando = False  
+                seguir_disparando = False
     
-    return False, disparos_jugador + disparos_nuevos  
+    return False, disparos_jugador + disparos_nuevos
+
 def turno_maquina(tablero_jugador, disparos_maquina):
     """Permite a la máquina realizar un disparo al tablero del jugador"""
-    print("\n" + "="*50)
     print("TURNO DE LA MÁQUINA")
     
     seguir_disparando = True
@@ -234,31 +233,29 @@ def turno_maquina(tablero_jugador, disparos_maquina):
                 imprimir_tablero(tablero_jugador)
 
             if not quedan_barcos(tablero_jugador):
-                return True, disparos_maquina + disparos_nuevos  
+                return True, disparos_maquina + disparos_nuevos
                 
             if resultado == "Agua":
-                seguir_disparando = False  
+                seguir_disparando = False
     
-    return False, disparos_maquina + disparos_nuevos  
+    return False, disparos_maquina + disparos_nuevos
 
-def mostrar_estadisticas_finales(jugador_gano, disparos_jugador, disparos_maquina):
-    """Muestra las estadísticas finales del juego"""
-    print("\n" + "="*50)
-    print("ESTADÍSTICAS FINALES DEL JUEGO")
-    print(f"Disparos realizados por ti: {disparos_jugador}")
-    print(f"Disparos realizados por la máquina: {disparos_maquina}")
-    
-    casillas_barcos = sum(BARCOS.values())
+def mostrar_movimientos_totales(disparos_jugador, disparos_maquina):
+    """Muestra el número total de movimientos realizados por el jugador y la máquina"""
+    print("\nNÚMERO TOTAL DE MOVIMIENTOS:")
+    print(f"Tus movimientos: {disparos_jugador}")
+    print(f"Movimientos de la máquina: {disparos_maquina}")
+    print(f"Total de movimientos en la partida: {disparos_jugador + disparos_maquina}")
 
 def anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
-    """Anuncia el ganador del juego, pero sin mostrar estadísticas"""
+    """Anuncia el ganador del juego y muestra el conteo de movimientos"""
     if jugador_gano:
-        mostrar_estadisticas_finales(True, disparos_jugador, disparos_maquina)
-        print("\n¡Felicidades! Has hundido toda la flota enemiga. ¡Ganaste! 🎉")
+        print("\n¡Felicidades! Has hundido toda la flota enemiga. ¡Ganaste!")
+        mostrar_movimientos_totales(disparos_jugador, disparos_maquina)
         return True
     elif maquina_gano:
-        mostrar_estadisticas_finales(False, disparos_jugador, disparos_maquina)
-        print("\nLa máquina ha hundido toda tu flota. ¡Perdiste! 😢")
+        print("\nLa máquina ha hundido toda tu flota. ¡Perdiste!")
+        mostrar_movimientos_totales(disparos_jugador, disparos_maquina)
         return True
     return False
 
@@ -298,7 +295,7 @@ def main():
     disparos_jugador = 0
     disparos_maquina = 0
 
-    print("\n¡BIENVENIDO A HUNDIR LA FLOTA!\n")
+    print("\n¡BIENVENIDO A HUNDIR LA FLOTA!")
     mostrar_leyenda()
     
     print("\nTu tablero inicial:")
@@ -313,7 +310,6 @@ def main():
     while not juego_terminado:
         if primer_turno:
             # En el primer turno no mostramos el tablero del jugador de nuevo
-            print("\n" + "="*50)
             print("\nTU TURNO")
             print("\nTablero enemigo:")
             imprimir_tablero(tablero_vista_maquina)
@@ -343,7 +339,9 @@ def main():
             primer_turno = False
         else:
             # Turno del jugador
-            jugador_gano, disparos_jugador = turno_jugador(tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador, disparos_maquina)
+            jugador_gano, disparos_jugador = turno_jugador(
+                tablero_maquina, tablero_vista_maquina, tablero_jugador, disparos_jugador
+            )
 
         # Verificar si el juego terminó después del turno del jugador
         if anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
@@ -352,7 +350,9 @@ def main():
             
         # Turno de la máquina (solo si el jugador no ganó)
         if not jugador_gano:
-            maquina_gano, disparos_maquina = turno_maquina(tablero_jugador, disparos_maquina)
+            maquina_gano, disparos_maquina = turno_maquina(
+                tablero_jugador, disparos_maquina
+            )
             
             # Verificar si el juego terminó después del turno de la máquina
             if anuncia_ganador(jugador_gano, maquina_gano, disparos_jugador, disparos_maquina):
