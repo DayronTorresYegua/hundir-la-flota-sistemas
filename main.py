@@ -1,7 +1,8 @@
 import random
 import sys
 
-# Constantes
+# CONSTANTES
+
 TAMANIO_TABLERO = 10
 BARCOS = {
     "Portaaviones": 4,
@@ -18,6 +19,7 @@ LETRAS_A_NUMEROS = {
 NUMEROS_A_LETRAS = {v: k for k, v in LETRAS_A_NUMEROS.items()}
 
 # ENTRADA
+
 def entrada_usuario():
     """Solicita al usuario que ingrese una coordenada (letra y número) para disparar"""
     sys.stdout.write("Introduce la coordenada (ejemplo: A 5 o A5): ")
@@ -268,16 +270,6 @@ def imprimir_tablero(tablero):
         letra_fila = NUMEROS_A_LETRAS[i]
         print(letra_fila + " " + " ".join(fila))
 
-def mostrar_leyenda():
-    """Muestra la leyenda de símbolos del tablero"""
-    print("\nLeyenda:")
-    print("X - Casilla sin descubrir")
-    print("- - Agua")
-    print("T - Barco tocado")
-    print("H - Barco hundido")
-    print("P, B, C, S, L - Tus barcos (Portaaviones, Buque, Crucero, Submarino, Lancha)")
-    print("\nCoordenadas: Usa letra (A-J) y número (0-9), por ejemplo: A5, B3, J9")
-
 def main():
     """Función principal que controla el flujo del juego"""
     # Crear tableros
@@ -296,8 +288,7 @@ def main():
     disparos_maquina = 0
 
     print("\n¡BIENVENIDO A HUNDIR LA FLOTA!")
-    mostrar_leyenda()
-    
+        
     print("\nTu tablero inicial:")
     imprimir_tablero(tablero_jugador)
 
